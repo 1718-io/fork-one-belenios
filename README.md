@@ -3,6 +3,8 @@ heroku-belenios
 
 For deploying to Heroku see [wm-README.md](https://github.com/wrmack/heroku-belenios/blob/master/wm-README.md)
 
+Live demo [here](https://belenios-latest.herokuapp.com/). Note that on Heroku's free tier dynos sleep when not used and can take 20 seconds to wake up and display a website
+
 ---
 
 
