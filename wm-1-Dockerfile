@@ -94,7 +94,7 @@ RUN chmod 777 /home/opam/deps
 USER root
 RUN ./wm-1-copy_deps.sh
 
-# The following is optional - only required to run this image in a container
+# The following is optional - only required for running this image in a container
 
 # Environment variables required by PGOCaml at run time
 ENV PGHOST=${PGHOST}
@@ -105,7 +105,15 @@ ENV PGDATABASE=${PGDATABASE}
 ENV CLIENT_ID=${CLIENT_ID}
 ENV CLIENT_SECRET=${CLIENT_SECRET}
 
-# Entrypoint script prepares ocsigen.conf using environment variables
+# _run directories expected by ocsingenserver.conf
+RUN mkdir -p \
+      _run/etc \
+      _run/log \
+      _run/upload \
+      _run/spool && \
+      chown -R belenios:belenios /home/belenios/src/_run
+
+# Entrypoint script prepares ocsigenserver.conf using environment variables
 COPY --chown=belenios:belenios wm-1-entrypoint.sh /home/belenios/src/entrypoint.sh
 COPY --chown=belenios:belenios wm-ocsigenserver.conf.template /home/belenios/src/ocsigenserver.conf.template
 COPY --chown=belenios:belenios wm-ocsigenserver.conf /home/belenios/src/ocsigenserver.conf
@@ -116,4 +124,7 @@ USER belenios
 ENTRYPOINT ["/home/belenios/src/entrypoint.sh"]
 CMD ["bash"]
 
-
+# To run this image in a container:
+# docker run -it --rm --name=test -p 8080:8080 belenios-stage-1
+# then: ocsigenserver.opt -c ocsigenserver.conf
+# then point browser to localhost:8080

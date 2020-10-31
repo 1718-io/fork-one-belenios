@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # heroku create belenios-20201030
-docker tag belenios-stage-3 registry.heroku.com/belenios-20201030/web
-docker push registry.heroku.com/belenios-20201030/web 
-heroku container:release web --app belenios-20201030
-heroku open --app belenios-20201030
+docker tag belenios-stage-3 registry.heroku.com/belenios-latest/web
+docker push registry.heroku.com/belenios-latest/web 
+heroku container:release web --app belenios-latest
+heroku open --app belenios-latest
 
 #
 # For reference

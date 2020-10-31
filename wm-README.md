@@ -105,7 +105,7 @@ heroku open --app [app name]
 
 ### Google Oauth authentication
 
-To provide for your app to use Google Oauth authentication of users, go to [Google Cloud Platform](https://console.cloud.google.com), create a new project (drop-down at top) then go to "API's and Services" then "Credentials" then "Create credentials" then "OAuth client ID".
+To provide for your app to use Google Oauth authentication of users, go to [Google API console](https://console.developers.google.com/), create a new project then "Credentials" then "Create credentials" then "OAuth client ID".
 
 - Application type is "Web application".
 - Provide an appropriate name.

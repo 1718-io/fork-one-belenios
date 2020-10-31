@@ -115,7 +115,6 @@ RUN rm -R -f /home/belenios/src/_build/*
 #
 
 USER belenios
-# USER mail
 
 # Entrypoint script prepares ocsigen.conf using container environment variables
 ENTRYPOINT ["/home/belenios/src/entrypoint.sh"]
