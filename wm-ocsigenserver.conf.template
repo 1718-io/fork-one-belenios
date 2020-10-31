@@ -1,0 +1,73 @@
+<ocsigen>
+    <server>
+        <port>${PORT}</port>
+        <user>${USER}</user>
+        <group>${GROUP}</group>
+        <logdir>_run/log</logdir>
+        <datadir>_run/lib</datadir>
+        <uploaddir>_run/upload</uploaddir>
+        <maxuploadfilesize>1024kB</maxuploadfilesize>
+        <commandpipe>/tmp/ocsigenserver_command</commandpipe>
+        <charset>utf-8</charset>
+
+        <findlib path="_run/usr/lib"/>
+ 
+        <extension findlib-package="ocsigenserver.ext.staticmod"/>
+        <extension findlib-package="ocsigenserver.ext.redirectmod"/>
+        <extension findlib-package="pgocaml" /> 
+<!--        <extension findlib-package="pgocaml_ppx" /> -->
+        <extension findlib-package="belenios-platform-native"/>
+<!--        
+        <extension findlib-package="ocsigenserver.ext.ocsipersist-sqlite">
+            <database file="_run/lib/ocsidb"/>
+        </extension>
+-->
+       
+        <extension findlib-package="ocsigenserver.ext.ocsipersist-pgsql">
+            <database
+                host="${PGHOST}"
+                port="${PGPORT}"
+                user="${PGUSER}"
+                password="${PGPASSWORD}"
+                database="${PGDATABASE}"
+            />
+        </extension>
+
+        <extension findlib-package="eliom.server"/>
+
+        <extension findlib-package="lwt_ppx" /> 
+        <extension findlib-package="js_of_ocaml-ppx_deriving_json" />
+
+
+       <host charset="utf-8" hostfilter="*" defaulthostname="localhost">
+            <!-- <redirect suburl="^$" dest="http://www.example.org"/> -->
+            <site path="static" charset="utf-8">
+                <static dir="_run/usr/share/belenios-server" />
+            </site>
+                 
+            <site path="monitor">
+                <eliom findlib-package="eliom.server.monitor.start"/>
+            </site>
+            
+            <eliom findlib-package="belenios-server">
+                <maxrequestbodysizeinmemory value="1048576"/>
+                <maxmailsatonce value="1000"/>
+                <uuid length="14"/>
+                <gdpr uri="http://www.example.org/privacy_policy.html"/> 
+                <!-- <contact uri="mailto:contact@example.org"/> -->
+                <!-- <server mail="noreply@example.org"/>
+                <auth name="demo"><dummy/></auth> --> <!-- DEMO -->
+                <!-- <auth name="local"><password db="demo/password_db.csv"/></auth> --> <!-- DEMO -->
+                <!-- <auth name="public"><password db="_run/password_db.csv" allowsignups="true"/></auth> -->
+                <auth name="google"><oidc server="https://accounts.google.com" client_id="${CLIENT_ID}" client_secret="${CLIENT_SECRET}"/></auth>
+                <source file="_run/usr/share/belenios-server/belenios.tar.gz"/>
+                <default-group file="_run/usr/share/belenios-server/groups/default.json"/>
+                <nh-group file="_run/usr/share/belenios-server/groups/rfc3526-2048.json"/>
+                <locales dir="_run/usr/share/belenios-server/locales"/>
+                <log file="_run/log/security.log"/>
+                <spool dir="_run/spool"/>
+                <warning file="_run/warning.html"/>
+            </eliom> 
+        </host>
+    </server>
+</ocsigen>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>Belenios Tool</title>
+    <script src="sjcl.js"></script>
+    <script src="BigIntCompat.js"></script>
+    <script src="random.js"></script>
+    <script src="tool_js.js"></script>
+  </head>
+  <body>
+    <h1>Belenios Tool</h1>
+    <ul>
+      <li><a href="#tests">Unit tests</a></li>
+      <li><a href="#setup">Pre-election setup</a></li>
+      <li><a href="#election">Election management</a></li>
+    </ul>
+    <div id="tests">
+      <h2>Unit tests</h2>
+      <div>
+        <button id="do_unit_tests">Run unit tests</button>
+        <button id="bench_powm">Bench modular exponentiation</button>
+      </div>
+    </div>
+    <div id="setup">
+      <h2>Pre-election setup</h2>
+      <div>
+        <div>
+          UUID:
+          <div><textarea id="election_uuid" rows="1" cols="80"></textarea><button id="new_uuid">Generate</button></div>
+        </div>
+        <div>
+          Group parameters:
+          <div><textarea id="election_group" rows="1" cols="80">{"g":"2402352677501852209227687703532399932712287657378364916510075318787663274146353219320285676155269678799694668298749389095083896573425601900601068477164491735474137283104610458681314511781646755400527402889846139864532661215055797097162016168270312886432456663834863635782106154918419982534315189740658186868651151358576410138882215396016043228843603930989333662772848406593138406010231675095763777982665103606822406635076697764025346253773085133173495194248967754052573659049492477631475991575198775177711481490920456600205478127054728238140972518639858334115700568353695553423781475582491896050296680037745308460627","p":"20694785691422546401013643657505008064922989295751104097100884787057374219242717401922237254497684338129066633138078958404960054389636289796393038773905722803605973749427671376777618898589872735865049081167099310535867780980030790491654063777173764198678527273474476341835600035698305193144284561701911000786737307333564123971732897913240474578834468260652327974647951137672658693582180046317922073668860052627186363386088796882120769432366149491002923444346373222145884100586421050242120365433561201320481118852408731077014151666200162313177169372189248078507711827842317498073276598828825169183103125680162072880719","q":"78571733251071885079927659812671450121821421258408794611510081919805623223441"}</textarea></div>
+        </div>
+      </div>
+    </div>
+    <div id="tkeygen">
+      <h3>Trustee key generation</h3>
+      <button id="do_tkeygen">Generate a keypair</button>
+      <div>
+        <h4>Generated key identifier</h4>
+        <textarea id="tkeygen_id" rows="1" cols="10" readonly="readonly"></textarea>
+      </div>
+      <div>
+        <h4>Generated secret key</h4>
+        <textarea id="tkeygen_secret" rows="1" cols="80" readonly="readonly"></textarea>
+      </div>
+      <div>
+        <h4>Generated public key</h4>
+        <textarea id="tkeygen_public" rows="1" cols="80" readonly="readonly"></textarea>
+      </div>
+    </div>
+    <div id="credgen">
+      <h3>Credential management</h3>
+      <div>
+        <h4>Generate anonymous credentials</h4>
+        Number of credentials to generate:
+        <div><textarea id="credgen_number"></textarea></div>
+        <button id="do_credgen_generate">Generate</button>
+      </div>
+      <div>
+        <h4>Generate credentials with identity matching</h4>
+        <div>
+          List of identities:
+          <div><textarea id="credgen_ids"></textarea></div>
+        </div>
+        <button id="do_credgen_ids">Generate</button>
+      </div>
+      <div>
+        <h4>Generated private credentials</h4>
+        <textarea id="credgen_generated_creds" readonly="readonly"></textarea>
+      </div>
+      <div>
+        <h4>Generated public credentials</h4>
+        <textarea id="credgen_generated_pks" readonly="readonly"></textarea>
+      </div>
+      <div>
+        <h4>Check a credential</h4>
+        <div>
+          Credential:
+          <div><textarea id="credgen_derive_input"></textarea></div>
+          <button id="do_credgen_derive">Generate public key</button>
+        </div>
+        <div>
+          <textarea id="credgen_derive_output" rows="1" cols="80" readonly="readonly"></textarea>
+        </div>
+      </div>
+    </div>
+    <div id="mkelection">
+      <h3>Election creation</h3>
+      <div>
+        <div>
+          Trustee public keys:
+          <div><textarea id="mkelection_pks" rows="3" cols="80"></textarea></div>
+        </div>
+        <div>
+          Questions:
+          <div><textarea id="mkelection_template" rows="1" cols="80"></textarea></div>
+        </div>
+      </div>
+      <div>
+        <h4>Output</h4>
+        <div>
+          <button id="do_mkelection">Generate</button>
+          <div><textarea id="mkelection_output"></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div id="election">
+      <h2>Election management</h2>
+      <div>
+        <h3>Election parameters</h3>
+        <textarea id="election_params" rows="1" cols="80"></textarea>
+      </div>
+      <div>
+        <h3>Trustee public keys</h3>
+        <textarea id="election_pks" rows="1" cols="80"></textarea>
+      </div>
+      <div>
+        <h3>Public credentials</h3>
+        <textarea id="election_pubcreds" rows="1" cols="80"></textarea>
+      </div>
+      <div>
+        <h3>Ballot creation</h3>
+        Secret credential:
+        <div><textarea id="election_privcred" rows="1" cols="80"></textarea></div>
+        Plaintext choices:
+        <div><textarea id="election_choices" rows="1" cols="80"></textarea></div>
+        <button id="do_encrypt">Create encrypted ballot</button>
+        <div><textarea id="election_ballot" rows="1" cols="80" readonly="readonly"></textarea></div>
+      </div>
+      <div>
+        <h3>Ballots</h3>
+        <textarea id="election_ballots" rows="1" cols="80"></textarea>
+      </div>
+      <div>
+        <h3>Partial decryption</h3>
+        Private key:
+        <div><textarea id="election_privkey" rows="1" cols="80"></textarea></div>
+        <button id="do_decrypt">Perform partial decryption</button>
+        <div><textarea id="election_pd" rows="1" cols="80" readonly="readonly"></textarea></div>
+      </div>
+      <div>
+        <h3>Election result</h3>
+        Partial decryptions:
+        <div><textarea id="election_factors" rows="1" cols="80"></textarea></div>
+        <div><button id="do_validate" rows="1" cols="80">Validate</textarea></div>
+        <div><textarea id="election_result" rows="1" cols="80"></textarea></div>
+        <div><button id="do_verify">Verify</button></div>
+      </div>
+    </div>
+  </body>
+</html>

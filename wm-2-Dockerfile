@@ -1,0 +1,33 @@
+
+# Build wm-1-Dockerfile as the image belenios-stage-1 by running wm-1-build.sh
+# Build wm-2-Dockerfile as the image belenios-stage-2 by running wm-2-build.sh
+# Build wm-3-Dockerfile as the image belenios-stage-3 by running wm-3-build.sh
+
+# 
+# Stage 2 - This stage compiles Exim from source
+#
+# ./wm-2-build.sh
+#
+
+# 
+# Need to build Exim configured with a user that Heroku will accept 
+#
+FROM ubuntu 
+
+# Packages needed for building exim from source
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    build-essential \
+    libpcre3-dev \
+    libdb-dev \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Compile-time configuration is in wm-exim-Makefile
+# Run-time configuration will be added in stage 3
+COPY wm-2-exim-4.94.tar /exim-4.94.tar
+RUN tar -xvf exim-4.94.tar
+COPY wm-2-exim-Makefile /exim-4.94/Local/Makefile
+WORKDIR /exim-4.94
+USER root
+RUN make && make install

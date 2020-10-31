@@ -1,0 +1,119 @@
+
+# Build wm-1-Dockerfile as the image belenios-stage-1 by running wm-1-build.sh
+# Build wm-2-Dockerfile as the image belenios-stage-2 by running wm-2-build.sh
+# Build wm-3-Dockerfile as the image belenios-stage-3 by running wm-3-build.sh
+
+#
+# Stage 1 - This stage installs Ocaml into Ubuntu and builds Belenios 
+# ./wm-1-build.sh
+# 
+
+FROM ocaml/opam2-staging:ubuntu-20.04-opam-linux-amd64 
+
+# Note: the build must be in a Belenios git repository - (by cloning Belenios source). 
+# Makefile looks for the tag to compare to the Belenios version. 
+
+# Install Linux packages required for building Belenios 
+RUN sudo apt-get update && sudo apt-get install --no-install-recommends -y \
+    apt-utils \
+    build-essential \
+    ca-certificates \
+    cracklib-runtime \
+    gettext-base \
+    imagemagick \
+    jq \
+    libgd-securityimage-perl \
+    libgdm-dev \
+    libgmp-dev \
+    libncurses-dev \
+    libpcre3-dev \
+    libssl-dev \
+    libsqlite3-dev \
+    m4 \
+    pkg-config \
+    uuid-runtime \
+    wget \
+    zip \
+    unzip \
+    zlib1g-dev \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+# Initialise opam and install ocaml and ocaml dependencies for Belenios
+# - Answer all prompts with yes
+# - Disable sandboxing per https://github.com/ocaml/opam/issues/3498, https://github.com/ocaml/opam/issues/3424 
+# - Write opam env to bashrc
+# - If need to reinitialise opam, use --reinit as in: RUN opam init --disable-sandboxing --reinit -y
+USER opam
+ENV PATH='/home/opam/.opam/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+ENV CAML_LD_LIBRARY_PATH='/home/opam/.opam/default/lib/stublibs:/home/opam/.opam/default/lib/ocaml/stublibs:/home/opam/.opam/default/lib/ocaml'
+
+RUN opam init --disable-sandboxing -y \
+    && echo "$(opam env)" >> /home/opam/.bashrc \
+    && opam install opam-depext ocamlfind -y \
+    && opam install uuidm dune atdgen zarith cryptokit calendar cmdliner cstruct sqlite3 csv eliom gettext-camomile pgocaml pgocaml_ppx -y \
+    && opam env \
+    && opam clean -a -c -r --logs --unused-repositories
+
+# Create belenios user and home directory
+USER root
+RUN useradd --create-home belenios
+USER belenios
+WORKDIR /home/belenios
+COPY --chown=belenios:belenios . /home/belenios/src
+WORKDIR /home/belenios/src
+RUN if [ `git status --porcelain | grep -v '^?? ' | wc -l ` -ne 0 ]; then git add .; git commit -m "message"; fi
+RUN echo "$(opam env)" >> /home/belenios/.bashrc 
+
+# Environment variables required by PGOCaml at compile time
+# These are passed in as arguments with the docker build command 
+ARG PGHOST
+ARG PGPORT
+ARG PGUSER
+ARG PGPASSWORD
+ARG PGDATABASE
+ARG CLIENT_ID
+ARG CLIENT_SECRET
+
+# Build belenios
+RUN make clean \
+    && make -f wm-1-Makefile build-release-server
+
+
+# Once ocsigenserver is running it loads packages dynamically (as specified in ocsigenserver.conf) 
+# so need to make these and their dependencies available to wm-3-Dockerfile
+# Copy packages and dependencies to /home/opam/deps for access in wm-3-Dockerfile build.  
+# Dependencies can be found from:  
+# - ocamlfind query -recursive eliom.server 
+# - or by trial and error, from complaints in the terminal about packages not found.
+
+RUN chmod +x wm-1-copy_deps.sh 
+USER opam
+RUN mkdir /home/opam/deps
+RUN chown opam:opam /home/opam/deps
+RUN chmod 777 /home/opam/deps
+USER root
+RUN ./wm-1-copy_deps.sh
+
+# The following is optional - only required to run this image in a container
+
+# Environment variables required by PGOCaml at run time
+ENV PGHOST=${PGHOST}
+ENV PGPORT=${PGPORT}
+ENV PGUSER=${PGUSER}
+ENV PGPASSWORD=${PGPASSWORD}
+ENV PGDATABASE=${PGDATABASE}
+ENV CLIENT_ID=${CLIENT_ID}
+ENV CLIENT_SECRET=${CLIENT_SECRET}
+
+# Entrypoint script prepares ocsigen.conf using environment variables
+COPY --chown=belenios:belenios wm-1-entrypoint.sh /home/belenios/src/entrypoint.sh
+COPY --chown=belenios:belenios wm-ocsigenserver.conf.template /home/belenios/src/ocsigenserver.conf.template
+COPY --chown=belenios:belenios wm-ocsigenserver.conf /home/belenios/src/ocsigenserver.conf
+RUN chmod +x /home/belenios/src/entrypoint.sh
+
+# Sometimes it is useful to be the user belenios when running this image
+USER belenios
+ENTRYPOINT ["/home/belenios/src/entrypoint.sh"]
+CMD ["bash"]
+
+

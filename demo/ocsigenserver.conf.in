@@ -1,0 +1,78 @@
+<!-- -*- Mode: Xml -*- -->
+<ocsigen>
+
+  <server>
+
+    <port>8001</port>
+
+    <logdir>_VARDIR_/log</logdir>
+    <datadir>_VARDIR_/lib</datadir>
+
+    <uploaddir>_VARDIR_/upload</uploaddir>
+
+    <!--
+      The following limits are there to avoid flooding the server.
+      <maxuploadfilesize> might need to be increased for handling large
+      elections.
+      <maxconnected> is related to the number of simultaneous voters
+      visiting the server.
+    -->
+    <maxuploadfilesize>1024kB</maxuploadfilesize>
+    <maxconnected>500</maxconnected>
+
+    <commandpipe>_RUNDIR_/ocsigenserver_command</commandpipe>
+
+    <charset>utf-8</charset>
+
+    <findlib path="_LIBDIR_"/>
+
+    <extension findlib-package="ocsigenserver.ext.staticmod"/>
+    <extension findlib-package="ocsigenserver.ext.redirectmod"/>
+
+    <extension findlib-package="ocsigenserver.ext.ocsipersist-sqlite">
+      <database file="_VARDIR_/lib/ocsidb"/>
+    </extension>
+
+    <extension findlib-package="eliom.server"/>
+    <extension findlib-package="belenios-platform-native"/>
+
+    <host charset="utf-8" hostfilter="*" defaulthostname="localhost">
+      <!-- <redirect suburl="^$" dest="http://www.example.org"/> -->
+      <site path="static" charset="utf-8">
+        <static dir="_SHAREDIR_" />
+      </site>
+      <site path="monitor">
+        <eliom findlib-package="eliom.server.monitor.start"/>
+      </site>
+      <eliom findlib-package="belenios-server">
+        <!--
+          The following can be adjusted to the capacity of your system.
+          If <maxrequestbodysizeinmemory> is too small, large elections
+          might fail, in particular with so-called alternative questions
+          with many voters.
+          <maxmailsatonce> depends heavily on how sending emails is
+          handled by your system.
+        -->
+        <maxrequestbodysizeinmemory value="1048576"/>
+        <maxmailsatonce value="1000"/>
+        <uuid length="14"/>
+        <gdpr uri="http://www.example.org/privacy_policy.html"/>
+        <!-- <contact uri="mailto:contact@example.org"/> -->
+        <server mail="noreply@example.org"/>
+        <auth name="demo"><dummy/></auth> <!-- DEMO -->
+        <auth name="local"><password db="demo/password_db.csv"/></auth> <!-- DEMO -->
+        <auth name="public"><password db="_VARDIR_/password_db.csv" allowsignups="true"/></auth>
+        <!-- <auth name="google"><oidc server="https://accounts.google.com" client_id="client-id" client_secret="client-secret"/></auth> -->
+        <source file="_SHAREDIR_/belenios.tar.gz"/>
+        <default-group file="_SHAREDIR_/groups/default.json"/>
+        <nh-group file="_SHAREDIR_/groups/rfc3526-2048.json"/>
+        <log file="_VARDIR_/log/security.log"/>
+        <locales dir="_SHAREDIR_/locales"/>
+        <spool dir="_VARDIR_/spool"/>
+        <warning file="_VARDIR_/warning.html"/>
+      </eliom>
+    </host>
+
+  </server>
+
+</ocsigen>

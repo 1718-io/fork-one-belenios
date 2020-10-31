@@ -1,0 +1,126 @@
+
+# Build wm-1-Dockerfile as the image belenios-stage-1 by running wm-1-build.sh
+# Build wm-2-Dockerfile as the image belenios-stage-2 by running wm-2-build.sh
+# Build wm-3-Dockerfile as the image belenios-stage-3 by running wm-3-build.sh
+
+# Stage 3 - Final stage copies executables, dependent libraries and configurations
+# ./wm-3-build.sh
+# 
+
+FROM belenios-stage-1 AS buildstage
+FROM belenios-stage-2 AS eximbuild
+
+FROM ubuntu
+
+#
+# Install linux packages
+#
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    gettext-base \
+    libssl1.1 \
+    libgdm-dev \
+    cron \
+    netbase \
+    libgnutls-dane0 \
+    libidn11 \   
+    nano && \ 
+    apt-get clean && \
+    apt-get autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
+#
+# Copy over ocaml libraries from wm-Dockerfile-stage-1 image
+#
+RUN adduser --uid 1000 --disabled-password --gecos '' opam  && \
+    passwd -l opam && \
+    chown -R opam:opam /home/opam     
+
+USER opam
+ENV PATH='/home/opam/.opam/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+ENV CAML_LD_LIBRARY_PATH='/home/opam/.opam/default/lib/stublibs:/home/opam/.opam/default/lib/ocaml/stublibs:/home/opam/.opam/default/lib/ocaml:/home/opam/.opam/default/lib/ocaml/threads'
+
+ENV BINDIR="/home/opam/.opam/default/bin/"
+COPY --chown=opam:opam --from=buildstage ["${BINDIR}ocsigenserver.opt", "${BINDIR}ocamlrun", "${BINDIR}ocamlfind", "${BINDIR}"]
+COPY --chown=opam:opam --from=buildstage ["/home/opam/deps/", "/home/opam/.opam/default/lib/"]
+
+USER root
+
+#
+# Create belenios user
+#
+
+RUN groupadd dyno && \
+    usermod -a -G dyno mail && \ 
+    useradd -G dyno,mail --create-home belenios && \
+    mkdir /usr/exim 
+
+#
+# Install exim 
+#
+COPY --chown=root:root --from=eximbuild ["/usr/exim", "/usr/exim"]
+RUN chown root /usr/exim/exim-4.94-2 && \
+    chmod a+x /usr/exim/exim-4.94-2 && \
+    chmod u+s /usr/exim/exim-4.94-2
+COPY wm-3-exim4.conf /etc/exim4/exim4.conf
+COPY wm-3-exim4.conf /usr/exim/etc/exim4.conf
+COPY wm-3-exim-aliases /etc/aliases
+COPY wm-3-secrets-gmail /secrets-gmail
+COPY wm-3-read-secrets.sh /read-secrets.sh
+RUN chmod +x /read-secrets.sh && /read-secrets.sh
+COPY wm-3-sendmail.sh /usr/sbin/sendmail
+COPY wm-3-sendmail.sh /usr/lib/sendmail
+RUN chmod +x /usr/sbin/sendmail && \
+    chmod +x /usr/lib/sendmail 
+
+
+#
+# Copy various configuration files
+#
+
+# USER belenios
+WORKDIR /home/belenios/src
+COPY --chown=belenios:dyno wm-3-entrypoint.sh entrypoint.sh
+COPY --chown=belenios:dyno wm-3-secrets secrets
+COPY --chown=belenios:dyno wm-ocsigenserver.conf ocsigenserver.conf
+COPY --chown=belenios:dyno wm-ocsigenserver.conf.template ocsigenserver.conf.template
+RUN chmod +x entrypoint.sh
+
+#
+# Following required by Belenios runtime
+#
+
+USER root
+RUN mkdir -p /home/belenios/src/var && \
+    chown belenios:dyno /home/belenios/src/var && \
+    mkdir -p \
+      _run/etc \
+      _run/log \
+      _run/lib \
+      _run/upload \
+      _run/spool \
+      _run/usr/bin \
+      _run/usr/lib \
+      _run/usr/share && \
+      chown -R belenios:belenios /home/belenios/src/_run
+ENV USRDIR="/home/belenios/src/_run/usr/"
+COPY --chown=belenios:belenios --from=buildstage ["${USRDIR}bin/", "${USRDIR}bin/"]
+COPY --chown=belenios:belenios --from=buildstage ["${USRDIR}lib/", "${USRDIR}lib/"]
+COPY --chown=belenios:belenios --from=buildstage ["${USRDIR}share/", "${USRDIR}share/"]
+
+# Cleanup _build directory
+RUN rm -R -f /home/belenios/src/_build/*
+
+#
+# Container runtime
+#
+
+USER belenios
+# USER mail
+
+# Entrypoint script prepares ocsigen.conf using container environment variables
+ENTRYPOINT ["/home/belenios/src/entrypoint.sh"]
+
+
+# Get ocsigenserver going
+CMD ["ocsigenserver.opt","-c","/home/belenios/src/ocsigenserver.conf"]
+# CMD ["bash"]
