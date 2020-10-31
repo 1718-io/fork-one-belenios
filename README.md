@@ -1,7 +1,7 @@
 heroku-belenios
 ===============
 
-For deploying to Heroku see wm-README.md
+For deploying to Heroku see [wm-README.md](https://github.com/wrmack/heroku-belenios/blob/master/wm-README.md)
 
 ---
 
