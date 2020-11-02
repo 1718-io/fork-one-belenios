@@ -11,6 +11,9 @@ You might wish to deploy Belenios to Heroku's free tier for testing purposes.  T
 |Belenios sends emails to voters |Include Exim mailer to send emails to Gmail SMTP relay service|
 |Heroku substitutes its own user |Provide variable substitution for ocsigenserver, exim and pgocaml configurations|
 
+## Caveat
+
+The solution of catching the process signal in order to save data to an external database is risky.  If, for some reason, this is not successful then all data from the current session is lost.  Therefore only use this solution for development purposes.
 
 ## Changes to belenios source files
 
@@ -24,9 +27,9 @@ This deployment requires three Docker images for a staged build.  The third imag
 
 |Image            | Build by running   | Image size | What it does       |
 |-----------------|--------------------|------------|-------------------|
-|belenios-stage-1 |wm-1-build.sh       |3.4 GB      |Installs a full Ocaml development environment and compiles belenios|
-|belenios-stage-2 |wm-2-build.sh       |347 MB      |Compiles exim      |
-|belenios-stage-3 |wm-3-build.sh       |516 MB      |Uses first two stages to build image for deployment to Heroku|
+|belenios-stage-1 |`./wm-1-build.sh`   |3.4 GB      |Installs a full Ocaml development environment and compiles belenios|
+|belenios-stage-2 |`./wm-2-build.sh`   |347 MB      |Compiles exim      |
+|belenios-stage-3 |`./wm-3-build.sh`   |516 MB      |Uses first two stages to build image for deployment to Heroku|
 
 ## Credentials
 
